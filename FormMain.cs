@@ -62,9 +62,24 @@ namespace CryptoTransceiverUtil
             Key = newKey;
         }
 
+        private string GetConfigDirPath(string sdRootDir)
+        {
+            return Path.Combine(sdRootDir, "config");
+        }
+
         private string GetKeyPath(string sdRootDir)
         {
             return Path.Combine(GetConfigDirPath(sdRootDir), "key");
+        }
+
+        private string GetKeyPathNew(string sdRootDir)
+        {
+            return Path.Combine(GetConfigDirPath(sdRootDir), "key.new");
+        }
+
+        private string GetKeyPathOld(string sdRootDir)
+        {
+            return Path.Combine(GetConfigDirPath(sdRootDir), "key.old");
         }
 
         private string GetFirmwarePath(string sdRootDir)
@@ -72,9 +87,14 @@ namespace CryptoTransceiverUtil
             return Path.Combine(sdRootDir, "zImage");
         }
 
-        private string GetConfigDirPath(string sdRootDir)
+        private string GetFirmwarePathNew(string sdRootDir)
         {
-            return Path.Combine(sdRootDir, "config");
+            return Path.Combine(sdRootDir, "zImage.new");
+        }
+
+        private string GetFirmwarePathOld(string sdRootDir)
+        {
+            return Path.Combine(sdRootDir, "zImage.old");
         }
 
         private void EnsureConfigDirExists(string sdRootDir)
@@ -149,12 +169,14 @@ namespace CryptoTransceiverUtil
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
+                    string keyPathNew = GetKeyPathNew(fbd.SelectedPath);
                     string keyPath = GetKeyPath(fbd.SelectedPath);
+                    string keyPathOld = GetKeyPathOld(fbd.SelectedPath);
                     try
                     {
                         EnsureConfigDirExists(fbd.SelectedPath);
 
-                        using (FileStream f = File.OpenWrite(keyPath))
+                        using (FileStream f = File.OpenWrite(keyPathNew))
                         {
                             byte[] key = Key;
                             Debug.Assert(key.Length == KEY_LENGTH);
@@ -162,6 +184,8 @@ namespace CryptoTransceiverUtil
                             f.Write(key, 0, key.Length);
                             f.Flush();
                         }
+
+                        File.Replace(keyPathNew, keyPath, keyPathOld, true);
                     }
                     catch (FileNotFoundException)
                     {
@@ -210,10 +234,13 @@ namespace CryptoTransceiverUtil
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
+                    string firmwarePathNew = GetFirmwarePathNew(fbd.SelectedPath);
+                    string firmwarePathOld = GetFirmwarePathOld(fbd.SelectedPath);
                     string firmwarePath = GetFirmwarePath(fbd.SelectedPath);
                     try
                     {
-                        File.Copy(textBoxFirmwarePath.Text, firmwarePath, true);
+                        File.Copy(textBoxFirmwarePath.Text, firmwarePathNew, true);
+                        File.Replace(firmwarePathNew, firmwarePath, firmwarePathOld, true);
                     }
                     catch (FileNotFoundException)
                     {
