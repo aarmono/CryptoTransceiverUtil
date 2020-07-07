@@ -185,7 +185,14 @@ namespace CryptoTransceiverUtil
                             f.Flush();
                         }
 
-                        File.Replace(keyPathNew, keyPath, keyPathOld, true);
+                        if (File.Exists(keyPath))
+                        {
+                            File.Replace(keyPathNew, keyPath, keyPathOld, true);
+                        }
+                        else
+                        {
+                            File.Move(keyPathNew, keyPath);
+                        }
                     }
                     catch (FileNotFoundException)
                     {
